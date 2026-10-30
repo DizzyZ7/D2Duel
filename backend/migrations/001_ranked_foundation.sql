@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS d2duel.ratings (
 );
 CREATE TABLE IF NOT EXISTS d2duel.matches (
  id UUID PRIMARY KEY,
+ valve_match_id BIGINT UNIQUE CHECK (valve_match_id > 0),
  season_id BIGINT NOT NULL REFERENCES d2duel.seasons(id),
  status TEXT NOT NULL CHECK (status IN ('pending','completed','cancelled','draw')),
  winner_steam_id BIGINT REFERENCES d2duel.players(steam_id),
@@ -37,6 +38,12 @@ CREATE TABLE IF NOT EXISTS d2duel.match_players (
  steam_id BIGINT NOT NULL REFERENCES d2duel.players(steam_id),
  team SMALLINT NOT NULL CHECK (team IN (2,3)),
  hero_name TEXT,
+ hero_kills INTEGER NOT NULL DEFAULT 0 CHECK (hero_kills >= 0),
+ deaths INTEGER NOT NULL DEFAULT 0 CHECK (deaths >= 0),
+ assists INTEGER NOT NULL DEFAULT 0 CHECK (assists >= 0),
+ last_hits INTEGER NOT NULL DEFAULT 0 CHECK (last_hits >= 0),
+ denies INTEGER NOT NULL DEFAULT 0 CHECK (denies >= 0),
+ hero_level INTEGER CHECK (hero_level BETWEEN 1 AND 30),
  net_worth BIGINT CHECK (net_worth >= 0),
  PRIMARY KEY (match_id, steam_id),
  UNIQUE (match_id, team)
