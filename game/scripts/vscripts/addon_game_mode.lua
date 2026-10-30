@@ -1,6 +1,7 @@
 -- D2Duel engine integration (experimental; requires Dota 2 Workshop Tools testing).
 if D2Duel == nil then D2Duel = class({}) end
 local Match = require("core.match_state")
+local Config = require("core.match_config")
 local RADIANT, DIRE = DOTA_TEAM_GOODGUYS, DOTA_TEAM_BADGUYS
 
 function Precache(context) end
@@ -13,10 +14,10 @@ function D2Duel:InitGameMode()
   self.match = Match.new()
   self.players = {}
   self.result_committed = false
-  GameRules:SetCustomGameTeamMaxPlayers(RADIANT, 1)
-  GameRules:SetCustomGameTeamMaxPlayers(DIRE, 1)
-  GameRules:SetHeroSelectionTime(0)
-  GameRules:SetPreGameTime(10)
+  GameRules:SetCustomGameTeamMaxPlayers(RADIANT, Config.max_players_per_team)
+  GameRules:SetCustomGameTeamMaxPlayers(DIRE, Config.max_players_per_team)
+  GameRules:SetHeroSelectionTime(Config.hero_selection_seconds)
+  GameRules:SetPreGameTime(Config.pregame_seconds)
   ListenToGameEvent("entity_killed", Dynamic_Wrap(D2Duel, "OnEntityKilled"), self)
   ListenToGameEvent("player_disconnect", Dynamic_Wrap(D2Duel, "OnPlayerDisconnect"), self)
   ListenToGameEvent("player_reconnected", Dynamic_Wrap(D2Duel, "OnPlayerReconnect"), self)
@@ -44,7 +45,7 @@ function D2Duel:OnPlayerDisconnect(event)
   if id == nil or id < 0 then return end
   local team = PlayerResource:GetTeam(id)
   if team ~= RADIANT and team ~= DIRE then return end
-  if self.match:disconnect(team) then
+  if self.match:disconnect(team, Time()) then
     if self.match.status == "cancelled" then
       GameRules:SetGamePaused(false)
       -- Cancellation is deliberately not represented as a ranked win.
@@ -68,8 +69,13 @@ end
 
 function D2Duel:OnThink()
   if self.match.status ~= "active" then return 1 end
+  -- NOTE: Think callbacks may not run during a pause. This is not a pause-safe timeout.
+  if self.match:check_disconnect_timeout(Time(), Config.reconnect_grace_seconds) then
+    if self.match.status == "finished" then self:Finish() end
+    return 1
+  end
   if GameRules:State_Get() ~= DOTA_GAMERULES_STATE_GAME_IN_PROGRESS then return 1 end
-  if GameRules:GetDOTATime(false, false) >= 600 then
+  if GameRules:GetDOTATime(false, false) >= Config.match_limit_seconds then
     local networth = {[RADIANT] = 0, [DIRE] = 0}
     for id = 0, DOTA_MAX_TEAM_PLAYERS - 1 do
       if PlayerResource:IsValidPlayerID(id) then
