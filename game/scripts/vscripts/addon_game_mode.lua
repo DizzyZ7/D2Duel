@@ -81,13 +81,7 @@ function D2Duel:OnPlayerDisconnect(event)
   local team = PlayerResource:GetTeam(id)
   if team ~= RADIANT and team ~= DIRE then return end
   if self.match:disconnect(team, Time()) then
-    if self.match.status == "cancelled" then
-      GameRules:SetGamePaused(false)
-      -- Cancellation is deliberately not represented as a ranked win.
-      print("[D2Duel] Cancelled: both players disconnected; no rating change")
-    else
-      GameRules:SetGamePaused(true)
-    end
+    GameRules:SetGamePaused(true)
   end
 end
 
@@ -104,7 +98,7 @@ end
 
 function D2Duel:OnThink()
   if self.match.status ~= "active" then return 1 end
-  -- NOTE: Think callbacks may not run during a pause. This is not a pause-safe timeout.
+  -- WARNING: Think callbacks may not run while paused; timeout is NOT reliable yet.
   if self.match:check_disconnect_timeout(Time(), Config.reconnect_grace_seconds) then
     if self.match.status == "finished" then self:Finish() end
     return 1
