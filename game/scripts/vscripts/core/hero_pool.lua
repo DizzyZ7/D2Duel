@@ -9,7 +9,7 @@ function M.from_kv(kv)
     if type(name) == "string" and name:match("^npc_dota_hero_[%w_]+$")
       and name ~= "npc_dota_hero_base" and type(data) == "table"
       and tostring(data.Enabled or "1") ~= "0"
-      and tostring(data.CMEnabled or "1") ~= "0" then
+      then
       heroes[#heroes + 1] = name
     end
   end
