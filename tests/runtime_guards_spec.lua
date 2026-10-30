@@ -17,4 +17,14 @@ assert(not G.is_competitor_hero(0,4,assigned,true,false))
 assert(not G.is_competitor_hero(0,2,assigned,true,true))
 assert(not G.is_competitor_hero(0,2,assigned,false,false))
 assert(not G.is_competitor_hero(0,2,{},true,false))
+local sample = {
+ {id=0,team=2,networth=500},
+ {id=1,team=3,networth=450},
+ {id=2,team=2,networth=90000}
+}
+local a,b = G.duel_networth(sample,assigned,2,3)
+assert(a == 500 and b == 450)
+assert(G.duel_networth({sample[1]},assigned,2,3) == nil)
+assert(G.duel_networth({sample[1],{id=1,team=3,networth=-1}},assigned,2,3) == nil)
+assert(G.duel_networth({sample[1],sample[2],sample[2]},assigned,2,3) == nil)
 print("runtime_guards_spec: OK")
