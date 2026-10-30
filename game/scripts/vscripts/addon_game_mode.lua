@@ -111,14 +111,15 @@ function D2Duel:OnThink()
   end
   if GameRules:State_Get() ~= DOTA_GAMERULES_STATE_GAME_IN_PROGRESS then return 1 end
   if GameRules:GetDOTATime(false, false) >= Config.match_limit_seconds then
-    local networth = {[RADIANT] = 0, [DIRE] = 0}
+    local players = {}
     for id = 0, DOTA_MAX_TEAM_PLAYERS - 1 do
       if PlayerResource:IsValidPlayerID(id) then
-        local team = PlayerResource:GetTeam(id)
-        if networth[team] ~= nil then networth[team] = networth[team] + PlayerResource:GetNetWorth(id) end
+        players[#players + 1] = {id=id, team=PlayerResource:GetTeam(id), networth=PlayerResource:GetNetWorth(id)}
       end
     end
-    if self.match:timeout(networth[RADIANT], networth[DIRE], GameRules:GetGameTime(), GameRules:GetDOTATime(false, false)) then
+    local radiant_nw, dire_nw = Guards.duel_networth(players, self.hero_assigned, RADIANT, DIRE)
+    if radiant_nw == nil then return 1 end
+    if self.match:timeout(radiant_nw, dire_nw, GameRules:GetGameTime(), GameRules:GetDOTATime(false, false)) then
       if self.match.status == "finished" then self:Finish() end
       if self.match.status == "draw" then
         print("[D2Duel] Draw at 15:00; no MMR change. Engine draw shutdown pending.")
