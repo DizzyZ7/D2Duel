@@ -3,6 +3,7 @@ if D2Duel == nil then D2Duel = class({}) end
 local Match = require("core.match_state")
 local Config = require("core.match_config")
 local HeroAssignment = require("core.hero_assignment")
+local HeroPool = require("core.hero_pool")
 local Guards = require("core.runtime_guards")
 local RADIANT, DIRE = DOTA_TEAM_GOODGUYS, DOTA_TEAM_BADGUYS
 
@@ -16,7 +17,11 @@ function D2Duel:InitGameMode()
   self.match = Match.new()
   self.players = {}
   self.hero_assigned = {}
-  self.hero_rolls = HeroAssignment.roll({RADIANT, DIRE}, RandomInt)
+  -- Load the live installed roster; fail closed if engine KV cannot be read.
+  local kv = LoadKeyValues("scripts/npc/npc_heroes.txt")
+  assert(type(kv) == "table", "D2Duel requires installed hero KV")
+  self.hero_roster = HeroPool.from_kv(kv)
+  self.hero_rolls = HeroAssignment.roll({RADIANT, DIRE}, RandomInt, self.hero_roster)
   self.result_committed = false
   GameRules:SetCustomGameTeamMaxPlayers(RADIANT, Config.max_players_per_team)
   GameRules:SetCustomGameTeamMaxPlayers(DIRE, Config.max_players_per_team)
