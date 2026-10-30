@@ -16,3 +16,6 @@ Player-hosted matches and client-originated claims are not authoritative. Do not
 
 ## Current scope
 Schema only: players, seasons, ratings, matches, match participants, and idempotency-keyed rating ledger. No live database connection or data migration has been performed.
+
+## Match records
+Every duel has a mandatory internal UUID; the optional unique Valve match ID is stored only if the engine exposes a trustworthy identifier. Match participants are keyed by SteamID64 and team (Radiant=2, Dire=3), with hero, kills/deaths/assists, last hits, denies, level and net worth. Finalization must validate exactly two distinct participants, the winner belongs to the match, and an authenticated server result before any rating update; schema constraints alone do not enforce all of these invariants.
