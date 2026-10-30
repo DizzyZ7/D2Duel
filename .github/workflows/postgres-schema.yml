@@ -52,7 +52,7 @@ jobs:
           INSERT INTO d2duel.ratings(steam_id,season_id,mmr) VALUES
             (76561198000000001,1,0), (76561198000000002,1,25);
           INSERT INTO d2duel.matches(id,season_id,status,started_at,valve_match_id)
-          VALUES ('00000000-0000-0000-0000-000000000001',1,'pending',now(),'test-valve-123');
+          VALUES ('00000000-0000-0000-0000-000000000001',1,'pending',now(),123456789);
           INSERT INTO d2duel.match_players(match_id,steam_id,team) VALUES
             ('00000000-0000-0000-0000-000000000001',76561198000000001,2),
             ('00000000-0000-0000-0000-000000000001',76561198000000002,3);
