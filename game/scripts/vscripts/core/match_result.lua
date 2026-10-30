@@ -3,7 +3,7 @@
 local Result = {}
 function Result.snapshot(match, match_id)
   assert(type(match_id) == "string" and #match_id > 0, "match_id required")
-  assert(match.status == "finished" or match.status == "cancelled", "match not final")
+  assert(match.status == "finished" or match.status == "cancelled" or match.status == "draw", "match not final")
   if match.status == "finished" then
     assert(match.winner == 2 or match.winner == 3, "invalid winner")
   end
