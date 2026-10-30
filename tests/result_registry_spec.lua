@@ -1,0 +1,12 @@
+package.path = "game/scripts/vscripts/?.lua;game/scripts/vscripts/?/init.lua;" .. package.path
+local Registry = require("core.result_registry")
+local r = Registry.new()
+assert(r:record({match_id="a",status="finished",winner=2,reason="first_kill"}))
+assert(not r:record({match_id="a",status="finished",winner=3,reason="first_kill"}))
+assert(r:get("a").winner == 2)
+assert(r:get("a").ranked_eligible == false)
+assert(r:record({match_id="b",status="draw",reason="overtime_draw"}))
+assert(r:get("b").winner == nil)
+assert(r:record({match_id="c",status="cancelled",reason="both_disconnected"}))
+assert(not pcall(function() r:record({match_id="",status="finished"}) end))
+print("result_registry_spec: OK")
