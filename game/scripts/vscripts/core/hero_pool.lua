@@ -1,23 +1,26 @@
--- Conservative hero pool for initial 1v1 testing; extend after balance checks.
-local Pool = {
-  "npc_dota_hero_axe",
-  "npc_dota_hero_lina",
-  "npc_dota_hero_lion",
-  "npc_dota_hero_nevermore",
-  "npc_dota_hero_queenofpain",
-  "npc_dota_hero_sniper",
-  "npc_dota_hero_viper",
-  "npc_dota_hero_zuus",
-}
+-- Hero roster comes from the installed Dota 2 hero KV, not a fixed shortlist.
+-- Inject the KV table to keep this module testable outside the engine.
 local M = {}
-function M.choose(random_int)
-  local index = random_int(1, #Pool)
-  assert(index >= 1 and index <= #Pool and index == math.floor(index))
-  return Pool[index]
+function M.from_kv(kv)
+  assert(type(kv) == "table", "hero KV table required")
+  local source = kv.DOTAHeroes or kv
+  local heroes = {}
+  for name, data in pairs(source) do
+    if type(name) == "string" and name:match("^npc_dota_hero_[%w_]+$")
+      and name ~= "npc_dota_hero_base" and type(data) == "table"
+      and tostring(data.Enabled or "1") ~= "0"
+      and tostring(data.CMEnabled or "1") ~= "0" then
+      heroes[#heroes + 1] = name
+    end
+  end
+  table.sort(heroes)
+  assert(#heroes > 0, "no enabled heroes in roster")
+  return heroes
 end
-function M.list()
-  local copy = {}
-  for i, hero in ipairs(Pool) do copy[i] = hero end
-  return copy
+function M.choose(random_int, roster)
+  assert(type(random_int) == "function" and type(roster) == "table" and #roster > 0)
+  local index = random_int(1, #roster)
+  assert(type(index) == "number" and index == math.floor(index) and index >= 1 and index <= #roster)
+  return roster[index]
 end
 return M
