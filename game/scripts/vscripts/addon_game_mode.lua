@@ -44,15 +44,30 @@ function D2Duel:OnNpcSpawned(event)
   if team ~= RADIANT and team ~= DIRE then return end
   local id = unit:GetPlayerOwnerID()
   local selected = self.hero_rolls[team]
-  if not Guards.is_valid_duel_player(id, team) or self.hero_assigned[id] then return end
+  if not Guards.is_valid_duel_player(id, team) or self.hero_assigned[id] or (self.hero_replacing and self.hero_replacing[id]) then return end
   if not selected then return end
   local replace = Guards.should_replace_hero(id, team, unit:GetUnitName(), selected, self.hero_assigned)
-  self.hero_assigned[id] = true -- set before replacement to avoid spawn recursion
-  if replace then
-    local gold = PlayerResource:GetGold(id)
-    local xp = unit:GetCurrentXP()
-    PlayerResource:ReplaceHeroWith(id, selected, gold, xp)
+  if not replace then
+    self.hero_assigned[id] = true
+    print("[D2Duel] Assigned player " .. tostring(id) .. " hero " .. selected)
+    return
   end
+  -- Guard against recursive npc_spawned events while replacing.
+  self.hero_replacing = self.hero_replacing or {}
+  if self.hero_replacing[id] then return end
+  self.hero_replacing[id] = true
+  local gold = PlayerResource:GetGold(id)
+  local xp = unit:GetCurrentXP()
+  local ok, new_hero = pcall(function()
+    return PlayerResource:ReplaceHeroWith(id, selected, gold, xp)
+  end)
+  self.hero_replacing[id] = nil
+  if not ok or not new_hero or new_hero:IsNull()
+    or new_hero:GetUnitName() ~= selected then
+    print("[D2Duel] Hero replacement failed for player " .. tostring(id))
+    return
+  end
+  self.hero_assigned[id] = true
   print("[D2Duel] Assigned player " .. tostring(id) .. " hero " .. selected)
 end
 
