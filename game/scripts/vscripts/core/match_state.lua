@@ -35,7 +35,7 @@ function Match:timeout(radiant_networth, dire_networth, now, game_seconds)
   if game_seconds < 900 then return false end
   if radiant_networth > dire_networth then return self:finish(2, "overtime_networth", now) end
   if dire_networth > radiant_networth then return self:finish(3, "overtime_networth", now) end
-  self.status, self.reason, self.finished_at = "draw", "overtime_draw", now
+  self.status, self.winner, self.reason, self.finished_at = "draw", nil, "overtime_draw", now
   return true
 end
 
