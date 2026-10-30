@@ -11,6 +11,13 @@ Seasonal cosmetics and identity for ranked 1v1. **No pay-to-win.** The pass neve
 - Premium ownership and claimed items must be verified server-side; no client-provided entitlement.
 - Cosmetics must be custom/original or properly licensed; do not reuse Valve hero or item artwork without permission.
 
+## Premium pricing
+- Target price: **USD 1.00 per season** for the premium Duel Pass (not a recurring subscription).
+- Premium unlocks cosmetic rewards for all already-earned levels, including retroactive eligibility after purchase.
+- The free track remains available without payment.
+- Currency conversion, local taxes, payment provider fees, platform rules and permitted payment rails must be validated before enabling checkout.
+- The server must confirm the payment and bind entitlement to the correct Steam account and season. Client-side payment success is never sufficient.
+
 ## Progression and anti-abuse
 - XP only from authenticated completed eligible matches; never grant XP for cancelled matches or unverifiable client claims.
 - Match reward policy and daily quests require backend verification, anti-farming, duplicate match ID protection and abuse controls.
