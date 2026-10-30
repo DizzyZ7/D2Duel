@@ -3,6 +3,7 @@ if D2Duel == nil then D2Duel = class({}) end
 local Match = require("core.match_state")
 local Config = require("core.match_config")
 local HeroAssignment = require("core.hero_assignment")
+local Guards = require("core.runtime_guards")
 local RADIANT, DIRE = DOTA_TEAM_GOODGUYS, DOTA_TEAM_BADGUYS
 
 function Precache(context) end
@@ -37,11 +38,12 @@ function D2Duel:OnNpcSpawned(event)
   local team = unit:GetTeamNumber()
   if team ~= RADIANT and team ~= DIRE then return end
   local id = unit:GetPlayerOwnerID()
-  if id == nil or id < 0 or self.hero_assigned[id] then return end
   local selected = self.hero_rolls[team]
+  if not Guards.is_valid_duel_player(id, team) or self.hero_assigned[id] then return end
   if not selected then return end
+  local replace = Guards.should_replace_hero(id, team, unit:GetUnitName(), selected, self.hero_assigned)
   self.hero_assigned[id] = true -- set before replacement to avoid spawn recursion
-  if unit:GetUnitName() ~= selected then
+  if replace then
     local gold = PlayerResource:GetGold(id)
     local xp = unit:GetCurrentXP()
     PlayerResource:ReplaceHeroWith(id, selected, gold, xp)
