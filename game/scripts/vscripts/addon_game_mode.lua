@@ -2,6 +2,7 @@
 if D2Duel == nil then D2Duel = class({}) end
 local Match = require("core.match_state")
 local Config = require("core.match_config")
+local HeroAssignment = require("core.hero_assignment")
 local RADIANT, DIRE = DOTA_TEAM_GOODGUYS, DOTA_TEAM_BADGUYS
 
 function Precache(context) end
@@ -13,15 +14,39 @@ end
 function D2Duel:InitGameMode()
   self.match = Match.new()
   self.players = {}
+  self.hero_assigned = {}
+  self.hero_rolls = HeroAssignment.roll({RADIANT, DIRE}, RandomInt)
   self.result_committed = false
   GameRules:SetCustomGameTeamMaxPlayers(RADIANT, Config.max_players_per_team)
   GameRules:SetCustomGameTeamMaxPlayers(DIRE, Config.max_players_per_team)
   GameRules:SetHeroSelectionTime(Config.hero_selection_seconds)
   GameRules:SetPreGameTime(Config.pregame_seconds)
+  ListenToGameEvent("npc_spawned", Dynamic_Wrap(D2Duel, "OnNpcSpawned"), self)
   ListenToGameEvent("entity_killed", Dynamic_Wrap(D2Duel, "OnEntityKilled"), self)
   ListenToGameEvent("player_disconnect", Dynamic_Wrap(D2Duel, "OnPlayerDisconnect"), self)
   ListenToGameEvent("player_reconnected", Dynamic_Wrap(D2Duel, "OnPlayerReconnect"), self)
   GameRules:GetGameModeEntity():SetThink("OnThink", self, "D2DuelThink", 1)
+end
+
+-- Assign once per player, replacing the first spawned real hero.
+-- Workshop validation required for ReplaceHeroWith and hero-selection timing.
+function D2Duel:OnNpcSpawned(event)
+  if not event.entindex then return end
+  local unit = EntIndexToHScript(event.entindex)
+  if not unit or unit:IsNull() or not unit:IsRealHero() or unit:IsIllusion() then return end
+  local team = unit:GetTeamNumber()
+  if team ~= RADIANT and team ~= DIRE then return end
+  local id = unit:GetPlayerOwnerID()
+  if id == nil or id < 0 or self.hero_assigned[id] then return end
+  local selected = self.hero_rolls[team]
+  if not selected then return end
+  self.hero_assigned[id] = true -- set before replacement to avoid spawn recursion
+  if unit:GetUnitName() ~= selected then
+    local gold = PlayerResource:GetGold(id)
+    local xp = unit:GetCurrentXP()
+    PlayerResource:ReplaceHeroWith(id, selected, gold, xp)
+  end
+  print("[D2Duel] Assigned player " .. tostring(id) .. " hero " .. selected)
 end
 
 function D2Duel:OnEntityKilled(event)
