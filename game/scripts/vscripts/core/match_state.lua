@@ -45,10 +45,14 @@ function Match:disconnect(team, now)
   if type(now) ~= "number" or now ~= now or now == math.huge or now == -math.huge then return false end
   if not self.disconnected[team] then self.disconnected_at[team] = now end
   self.disconnected[team] = true
-  if self.disconnected[2] and self.disconnected[3] then
-    self.status, self.reason = "cancelled", "both_disconnected"
-  end
   return true
+end
+
+-- Only a trusted engine-confirmed abandon may trigger immediate forfeit.
+function Match:abandon(team, now)
+  if self.status ~= "active" or (team ~= 2 and team ~= 3) then return false end
+  if type(now) ~= "number" or now ~= now or now == math.huge or now == -math.huge then return false end
+  return self:finish(team == 2 and 3 or 2, "confirmed_abandon", now)
 end
 
 function Match:reconnect(team)
@@ -62,15 +66,16 @@ function Match:check_disconnect_timeout(now, grace_seconds)
   if self.status ~= "active" then return false end
   if type(now) ~= "number" or now ~= now or now == math.huge or now == -math.huge then return false end
   if type(grace_seconds) ~= "number" or grace_seconds <= 0 or grace_seconds ~= grace_seconds or grace_seconds == math.huge then return false end
-  if self.disconnected[2] and self.disconnected[3] then
-    self.status, self.reason = "cancelled", "both_disconnected"
-    return true
-  end
+  local expired_team, earliest
   for _, team in ipairs({2, 3}) do
     local since = self.disconnected_at[team]
-    if self.disconnected[team] and type(since) == "number" and now - since >= grace_seconds then
-      return self:finish(team == 2 and 3 or 2, "disconnect_forfeit", now)
+    if self.disconnected[team] and type(since) == "number"
+      and now - since >= grace_seconds and (not earliest or since < earliest) then
+      expired_team, earliest = team, since
     end
+  end
+  if expired_team then
+    return self:finish(expired_team == 2 and 3 or 2, "disconnect_forfeit", now)
   end
   return false
 end
