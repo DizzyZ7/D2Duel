@@ -3,7 +3,7 @@ local Config = {
   hero_selection_seconds = 0,
   pregame_seconds = 10,
   match_limit_seconds = 600,
-  reconnect_grace_seconds = 120,
+  reconnect_grace_seconds = 60,
   win_rating = 25,
   lose_rating = 25,
   -- These multipliers are design targets, NOT yet wired into engine filters.
