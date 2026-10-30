@@ -27,6 +27,7 @@ end
 function Match:timeout(radiant_networth, dire_networth, now, game_seconds)
   if self.status ~= "active" then return false end
   if type(game_seconds) ~= "number" or game_seconds < 600 then return false end
+  if type(radiant_networth) ~= "number" or type(dire_networth) ~= "number" then return false end
   if not self.overtime then
     if radiant_networth > dire_networth then return self:finish(2, "networth", now) end
     if dire_networth > radiant_networth then return self:finish(3, "networth", now) end
