@@ -108,7 +108,12 @@ function D2Duel:OnThink()
         if networth[team] ~= nil then networth[team] = networth[team] + PlayerResource:GetNetWorth(id) end
       end
     end
-    if self.match:timeout(networth[RADIANT], networth[DIRE], GameRules:GetGameTime()) then self:Finish() end
+    if self.match:timeout(networth[RADIANT], networth[DIRE], GameRules:GetGameTime(), GameRules:GetDOTATime(false, false)) then
+      if self.match.status == "finished" then self:Finish() end
+      if self.match.status == "draw" then
+        print("[D2Duel] Draw at 15:00; no MMR change. Engine draw shutdown pending.")
+      end
+    end
   end
   return 1
 end

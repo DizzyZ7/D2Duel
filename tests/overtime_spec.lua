@@ -1,0 +1,31 @@
+package.path = "game/scripts/vscripts/?.lua;game/scripts/vscripts/?/init.lua;" .. package.path
+local Match = require("core.match_state")
+local function eq(actual, expected) assert(actual == expected, tostring(actual) .. " ~= " .. tostring(expected)) end
+
+local m = Match.new()
+eq(m:timeout(100,100,599,599), false)
+eq(m.overtime, false)
+eq(m:timeout(100,100,600,600), false)
+eq(m.overtime, true)
+eq(m:timeout(150,100,899,899), false)
+eq(m.status, "active")
+eq(m:timeout(150,100,900,900), true)
+eq(m.status, "finished")
+eq(m.winner, 2)
+eq(m.reason, "overtime_networth")
+
+local tie = Match.new()
+tie:timeout(100,100,600,600)
+eq(tie:timeout(100,100,899,899), false)
+eq(tie:timeout(100,100,900,900), true)
+eq(tie.status, "draw")
+eq(tie.winner, nil)
+eq(tie:death(3,901), false)
+local a,b = tie:rating_delta(100,100)
+eq(a,0) eq(b,0)
+
+local immediate = Match.new()
+eq(immediate:timeout(101,100,600,600), true)
+eq(immediate.reason, "networth")
+eq(immediate.overtime, false)
+print("overtime_spec: OK")
