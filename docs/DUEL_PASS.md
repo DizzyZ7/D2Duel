@@ -12,7 +12,7 @@ Seasonal cosmetics and identity for ranked 1v1. **No pay-to-win.** The pass neve
 - Cosmetics must be custom/original or properly licensed; do not reuse Valve hero or item artwork without permission.
 
 ## Premium pricing
-- Target price: **USD 1.00 per season** for the premium Duel Pass (not a recurring subscription).
+- Target price: **USD 2.00** for an official Dota 2 Custom Game Pass, subject to Valve approval and pricing availability.\n- Valve documents Custom Game Pass entitlement as **30 days from purchase**, not a whole season; it does not auto-renew. Season cosmetics/progression must be designed independently of the 30-day paid entitlement.
 - Premium unlocks cosmetic rewards for all already-earned levels, including retroactive eligibility after purchase.
 - The free track remains available without payment.
 - Currency conversion, local taxes, payment provider fees, platform rules and permitted payment rails must be validated before enabling checkout.
@@ -36,8 +36,10 @@ Seasonal cosmetics and identity for ranked 1v1. **No pay-to-win.** The pass neve
 - `season_id`, `steam_id`, `premium_entitlement`, `xp_total`, `daily_xp`, `daily_utc_date`.
 - Idempotent `xp_grants` keyed by `(season_id, steam_id, match_id, grant_type)`.
 - Claimed rewards keyed by `(season_id, steam_id, reward_id)`.
-- Premium purchase verification via platform-approved payment integration; do not trust browser or Panorama flags.
+- Premium entitlement verification must use Valve-approved Custom Game Pass ownership, if Valve approves D2Duel. Never trust browser or Panorama flags.
 - Keep pass progression separate from ranked rating transactions.
 
 ## Release gate
-Pass cosmetics and XP are disabled until two-client Workshop tests and an authoritative persistence backend exist. Never ship an in-memory-only paid entitlement.
+Paid pass entitlement is disabled until Valve explicitly enables D2Duel Custom Game Pass, two-client Workshop tests pass and an authoritative persistence backend exists. Never ship an in-memory-only paid entitlement or third-party checkout.
+
+## Official platform references\n- https://www.dota2.com/customgamepassfaq?l=english — curated eligibility, 30-day validity, no automatic renewal, free base game.\n- https://partner.steamgames.com/doc/features/microtransactions — Steam Wallet purchasing requirements.\n- Valve has previously enforced non-commercial Workshop terms against unauthorized third-party monetization; do not implement a payment bypass.\n
