@@ -3,7 +3,7 @@ local Match = {}
 Match.__index = Match
 
 function Match.new()
-  return setmetatable({status = "active", winner = nil, reason = nil, disconnected = {}, finished_at = nil}, Match)
+  return setmetatable({status = "active", winner = nil, reason = nil, disconnected = {}, disconnected_at = {}, finished_at = nil}, Match)
 end
 
 function Match:finish(team, reason, now)
@@ -31,8 +31,9 @@ function Match:timeout(radiant_networth, dire_networth, now)
   return false -- overtime, no arbitrary tiebreaker
 end
 
-function Match:disconnect(team)
+function Match:disconnect(team, now)
   if self.status ~= "active" or (team ~= 2 and team ~= 3) then return false end
+  if not self.disconnected[team] then self.disconnected_at[team] = now end
   self.disconnected[team] = true
   if self.disconnected[2] and self.disconnected[3] then
     self.status, self.reason = "cancelled", "both_disconnected"
@@ -43,7 +44,24 @@ end
 function Match:reconnect(team)
   if self.status ~= "active" then return false end
   self.disconnected[team] = nil
+  self.disconnected_at[team] = nil
   return true
+end
+
+function Match:check_disconnect_timeout(now, grace_seconds)
+  if self.status ~= "active" then return false end
+  if type(now) ~= "number" or type(grace_seconds) ~= "number" then return false end
+  if self.disconnected[2] and self.disconnected[3] then
+    self.status, self.reason = "cancelled", "both_disconnected"
+    return true
+  end
+  for _, team in ipairs({2, 3}) do
+    local since = self.disconnected_at[team]
+    if self.disconnected[team] and type(since) == "number" and now - since >= grace_seconds then
+      return self:finish(team == 2 and 3 or 2, "disconnect_forfeit", now)
+    end
+  end
+  return false
 end
 
 function Match:rating_delta(radiant_rating, dire_rating)
