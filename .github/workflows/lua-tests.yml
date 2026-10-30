@@ -1,0 +1,21 @@
+name: Lua unit tests
+on:
+  push:
+  pull_request:
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lua 5.1
+        run: sudo apt-get update && sudo apt-get install -y lua5.1
+      - name: Syntax-check all Lua sources
+        run: |
+          find game/scripts/vscripts tests -type f -name '*.lua' -print0 | xargs -0 -n1 luac5.1 -p
+      - name: Run unit specs
+        run: |
+          set -eu
+          for spec in tests/*_spec.lua; do
+            echo "Running $spec"
+            lua5.1 "$spec"
+          done
