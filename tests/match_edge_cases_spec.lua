@@ -1,7 +1,9 @@
 package.path = "game/scripts/vscripts/?.lua;game/scripts/vscripts/?/init.lua;" .. package.path
 local Match = require("core.match_state")
 local m = Match.new()
-assert(m:timeout(500,500,600) == false)
+assert(m:timeout(500,500,600,600) == false)
+assert(m.overtime == true)
+assert(m:timeout(600,500,800,800) == false)
 assert(m.status == "active")
 assert(m:tower_destroyed(3,true,true,601) == false)
 assert(m:tower_destroyed(3,false,false,602) == false)
