@@ -2,6 +2,10 @@ package.path = "game/scripts/vscripts/?.lua;game/scripts/vscripts/?/init.lua;" .
 local Match = require("core.match_state")
 local function eq(actual, expected) assert(actual == expected, tostring(actual) .. " ~= " .. tostring(expected)) end
 
+local invalid = Match.new()
+eq(invalid:timeout(nil, 100, 600, 600), false)
+eq(invalid:timeout(100, nil, 600, 600), false)
+eq(invalid.status, "active")
 local m = Match.new()
 eq(m:timeout(100,100,599,599), false)
 eq(m.overtime, false)
