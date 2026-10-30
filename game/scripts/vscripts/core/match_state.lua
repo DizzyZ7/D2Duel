@@ -55,6 +55,12 @@ function Match:abandon(team, now)
   return self:finish(team == 2 and 3 or 2, "confirmed_abandon", now)
 end
 
+function Match:cancel(reason, now)
+  if self.status ~= "active" then return false end
+  self.status, self.winner, self.reason, self.finished_at = "cancelled", nil, reason or "server_failure", now
+  return true
+end
+
 function Match:reconnect(team)
   if self.status ~= "active" then return false end
   self.disconnected[team] = nil
@@ -66,6 +72,15 @@ function Match:check_disconnect_timeout(now, grace_seconds)
   if self.status ~= "active" then return false end
   if type(now) ~= "number" or now ~= now or now == math.huge or now == -math.huge then return false end
   if type(grace_seconds) ~= "number" or grace_seconds <= 0 or grace_seconds ~= grace_seconds or grace_seconds == math.huge then return false end
+  local a, b = self.disconnected_at[2], self.disconnected_at[3]
+  if self.disconnected[2] and self.disconnected[3]
+    and type(a) == "number" and type(b) == "number"
+    and math.abs(a - b) <= 5 then
+    if now - math.max(a, b) >= grace_seconds then
+      return self:cancel("suspected_shared_outage", now)
+    end
+    return false
+  end
   local expired_team, earliest
   for _, team in ipairs({2, 3}) do
     local since = self.disconnected_at[team]
