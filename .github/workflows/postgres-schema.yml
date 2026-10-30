@@ -1,0 +1,66 @@
+name: PostgreSQL schema tests
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/postgres-schema.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/postgres-schema.yml'
+jobs:
+  schema:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: d2duel_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d d2duel_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGPASSWORD: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply migration twice (idempotency)
+        run: |
+          psql -h localhost -U test -d d2duel_test -v ON_ERROR_STOP=1 -f backend/migrations/001_ranked_foundation.sql
+          psql -h localhost -U test -d d2duel_test -v ON_ERROR_STOP=1 -f backend/migrations/001_ranked_foundation.sql
+      - name: Check schema and constraints
+        run: |
+          psql -h localhost -U test -d d2duel_test -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          BEGIN
+            IF (SELECT count(*) FROM information_schema.tables WHERE table_schema='d2duel') <> 6 THEN
+              RAISE EXCEPTION 'Expected six ranked tables';
+            END IF;
+          END $$;
+          INSERT INTO d2duel.players(steam_id) VALUES (76561198000000001), (76561198000000002);
+          INSERT INTO d2duel.seasons(name,starts_at) VALUES ('test', now());
+          INSERT INTO d2duel.ratings(steam_id,season_id,mmr) VALUES
+            (76561198000000001,1,0), (76561198000000002,1,25);
+          INSERT INTO d2duel.matches(id,season_id,status,started_at)
+          VALUES ('00000000-0000-0000-0000-000000000001',1,'pending',now());
+          INSERT INTO d2duel.match_players(match_id,steam_id,team) VALUES
+            ('00000000-0000-0000-0000-000000000001',76561198000000001,2),
+            ('00000000-0000-0000-0000-000000000001',76561198000000002,3);
+          INSERT INTO d2duel.rating_transactions(match_id,steam_id,season_id,delta,mmr_before,mmr_after)
+          VALUES ('00000000-0000-0000-0000-000000000001',76561198000000001,1,25,0,25);
+          DO $$
+          BEGIN
+            BEGIN
+              INSERT INTO d2duel.rating_transactions(match_id,steam_id,season_id,delta,mmr_before,mmr_after)
+              VALUES ('00000000-0000-0000-0000-000000000001',76561198000000001,1,25,0,25);
+              RAISE EXCEPTION 'Duplicate transaction unexpectedly accepted';
+            EXCEPTION WHEN unique_violation THEN NULL;
+            END;
+          END $$;
+          SQL
