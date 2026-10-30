@@ -14,4 +14,11 @@ function Guards.should_replace_hero(id, team, unit_name, selected, assigned)
   if type(unit_name) ~= "string" then return false end
   return unit_name ~= selected
 end
+-- Only an assigned participant's real hero may decide first blood.
+-- Neutral, bot, unassigned or non-participant heroes must not end the duel.
+function Guards.is_competitor_hero(id, team, assigned, is_real_hero, is_illusion)
+  return Guards.is_valid_duel_player(id, team)
+    and type(assigned) == "table" and assigned[id] == true
+    and is_real_hero == true and is_illusion ~= true
+end
 return Guards
