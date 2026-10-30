@@ -3,7 +3,7 @@ local Match = {}
 Match.__index = Match
 
 function Match.new()
-  return setmetatable({status = "active", winner = nil, reason = nil, disconnected = {}, disconnected_at = {}, finished_at = nil}, Match)
+  return setmetatable({status = "active", winner = nil, reason = nil, disconnected = {}, disconnected_at = {}, finished_at = nil, overtime = false}, Match)
 end
 
 function Match:finish(team, reason, now)
@@ -24,11 +24,19 @@ function Match:tower_destroyed(tower_team, is_mid_t1, is_denied, now)
   return self:finish(tower_team == 2 and 3 or 2, "mid_t1", now)
 end
 
-function Match:timeout(radiant_networth, dire_networth, now)
+function Match:timeout(radiant_networth, dire_networth, now, game_seconds)
   if self.status ~= "active" then return false end
-  if radiant_networth > dire_networth then return self:finish(2, "networth", now) end
-  if dire_networth > radiant_networth then return self:finish(3, "networth", now) end
-  return false -- overtime, no arbitrary tiebreaker
+  if type(game_seconds) ~= "number" or game_seconds < 600 then return false end
+  if not self.overtime then
+    if radiant_networth > dire_networth then return self:finish(2, "networth", now) end
+    if dire_networth > radiant_networth then return self:finish(3, "networth", now) end
+    self.overtime = true
+  end
+  if game_seconds < 900 then return false end
+  if radiant_networth > dire_networth then return self:finish(2, "overtime_networth", now) end
+  if dire_networth > radiant_networth then return self:finish(3, "overtime_networth", now) end
+  self.status, self.reason, self.finished_at = "draw", "overtime_draw", now
+  return true
 end
 
 function Match:disconnect(team, now)
