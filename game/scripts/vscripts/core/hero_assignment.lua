@@ -2,12 +2,12 @@
 -- The same hero can be rolled for both players: independent random selection.
 local Pool = require("core.hero_pool")
 local Assignment = {}
-function Assignment.roll(teams, random_int)
+function Assignment.roll(teams, random_int, roster)
   assert(type(teams) == "table" and type(random_int) == "function")
   local result = {}
   for _, team in ipairs(teams) do
     assert(result[team] == nil, "duplicate team")
-    result[team] = Pool.choose(random_int)
+    result[team] = Pool.choose(random_int, roster)
   end
   return result
 end

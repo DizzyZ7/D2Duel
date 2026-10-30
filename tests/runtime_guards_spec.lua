@@ -1,0 +1,12 @@
+package.path = "game/scripts/vscripts/?.lua;game/scripts/vscripts/?/init.lua;" .. package.path
+local G = require("core.runtime_guards")
+assert(G.is_valid_duel_player(0,2))
+assert(G.is_valid_duel_player(1,3))
+assert(not G.is_valid_duel_player(-1,2))
+assert(not G.is_valid_duel_player(2,4))
+assert(not G.is_valid_duel_player(1.5,2))
+assert(G.should_replace_hero(0,2,"npc_dota_hero_axe","npc_dota_hero_lina",{}))
+assert(not G.should_replace_hero(0,2,"npc_dota_hero_lina","npc_dota_hero_lina",{}))
+assert(not G.should_replace_hero(0,2,"npc_dota_hero_axe","npc_dota_hero_lina",{[0]=true}))
+assert(not G.should_replace_hero(0,4,"npc_dota_hero_axe","npc_dota_hero_lina",{}))
+print("runtime_guards_spec: OK")
