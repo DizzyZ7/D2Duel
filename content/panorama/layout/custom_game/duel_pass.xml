@@ -1,0 +1,27 @@
+<root>
+  <styles>
+    <include src="file://{resources}/styles/custom_game/duel_pass.css" />
+  </styles>
+  <scripts>
+    <include src="file://{resources}/scripts/custom_game/duel_pass.js" />
+  </scripts>
+  <Panel id="DuelPassRoot" class="DuelPassRoot">
+    <Panel class="PassHeader">
+      <Label id="PassTitle" text="D2DUEL / ECLIPSE" />
+      <Label id="PassSubtitle" text="DUEL PASS - SEASON PREVIEW" />
+      <Label id="PassProgress" text="Level 0 / 50" />
+      <Label id="PassNotice" text="Preview only - purchases are not enabled." />
+    </Panel>
+    <Panel id="PassRewards" class="PassRewards">
+      <Panel class="PassTrack">
+        <Label class="TrackTitle" text="FREE TRACK" />
+        <Label id="FreeRewards" text="Emblem / Title / Banner / Season Badge" />
+      </Panel>
+      <Panel class="PassTrack PremiumTrack">
+        <Label class="TrackTitle" text="PREMIUM TRACK" />
+        <Label id="PremiumRewards" text="Frame / Spawn / Victory / Aura" />
+        <Label id="PassPrice" text="Target $2 - requires Valve approval" />
+      </Panel>
+    </Panel>
+  </Panel>
+</root>
