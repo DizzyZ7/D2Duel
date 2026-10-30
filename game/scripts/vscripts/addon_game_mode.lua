@@ -61,8 +61,11 @@ function D2Duel:OnEntityKilled(event)
   local victim = EntIndexToHScript(event.entindex_killed or -1)
   if not victim or victim:IsNull() then return end
   local team = victim:GetTeamNumber()
-  if victim:IsRealHero() and not victim:IsIllusion() then
-    if self.match:death(team, GameRules:GetGameTime()) then self:Finish() end
+  if victim:IsRealHero() then
+    local id = victim:GetPlayerOwnerID()
+    if Guards.is_competitor_hero(id, team, self.hero_assigned, true, victim:IsIllusion()) then
+      if self.match:death(team, GameRules:GetGameTime()) then self:Finish() end
+    end
     return
   end
   if victim:IsTower() then
