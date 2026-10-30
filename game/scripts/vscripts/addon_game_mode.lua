@@ -95,25 +95,21 @@ function D2Duel:OnPlayerDisconnect(event)
   if id == nil or id < 0 then return end
   local team = PlayerResource:GetTeam(id)
   if team ~= RADIANT and team ~= DIRE then return end
-  if self.match:disconnect(team, Time()) then
-    GameRules:SetGamePaused(true)
-  end
+  -- No automatic pause during an active duel: the opponent keeps playing.
+  -- A disconnect is not a confirmed abandon; the 60-second forfeit still applies.
+  self.match:disconnect(team, Time())
 end
 
 function D2Duel:OnPlayerReconnect(event)
   local id = event.PlayerID
   if id == nil or id < 0 then return end
   local team = PlayerResource:GetTeam(id)
-  if self.match:reconnect(team) then
-    if not self.match.disconnected[RADIANT] and not self.match.disconnected[DIRE] then
-      GameRules:SetGamePaused(false)
-    end
-  end
+  self.match:reconnect(team)
 end
 
 function D2Duel:OnThink()
   if self.match.status ~= "active" then return 1 end
-  -- WARNING: Think callbacks may not run while paused; timeout is NOT reliable yet.
+  -- No automatic disconnect pause is requested; validate engine think scheduling in Workshop Tools.
   if self.match:check_disconnect_timeout(Time(), Config.reconnect_grace_seconds) then
     if self.match.status == "finished" then self:Finish() end
     return 1
