@@ -1,0 +1,17 @@
+package.path = "game/scripts/vscripts/?.lua;game/scripts/vscripts/?/init.lua;" .. package.path
+local L = require("core.pass_loadout")
+local owned = {eclipse_emblem=true,eclipse_victory=true}
+local state, ok = L.equip({}, owned, "emblem", "eclipse_emblem")
+assert(ok and state.emblem=="eclipse_emblem")
+local denied, allowed = L.equip(state, owned, "hero_aura", "eclipse_champion")
+assert(not allowed and denied.hero_aura==nil)
+local mismatch, mismatch_ok = L.equip(state, owned, "hero_aura", "eclipse_emblem")
+assert(not mismatch_ok and mismatch.hero_aura==nil)
+local updated, yes = L.equip(state, owned, "victory_effect", "eclipse_victory")
+assert(yes and updated.victory_effect=="eclipse_victory")
+assert(state.victory_effect==nil)
+local clean = L.sanitize({emblem="eclipse_emblem",hero_aura="eclipse_champion",victory_effect="eclipse_victory"},owned)
+assert(clean.emblem=="eclipse_emblem" and clean.hero_aura==nil)
+local removed, removed_ok = L.equip(updated,owned,"victory_effect",nil)
+assert(removed_ok and removed.victory_effect==nil)
+print("pass_loadout_spec: OK")
