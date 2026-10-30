@@ -9,32 +9,29 @@ function Guards.is_valid_duel_player(id, team)
 end
 function Guards.should_replace_hero(id, team, unit_name, selected, assigned)
   if not Guards.is_valid_duel_player(id, team) then return false end
-  if assigned[id] then return false end
+  if type(assigned) ~= "table" or assigned[id] then return false end
   if type(selected) ~= "string" or selected == "" then return false end
   if type(unit_name) ~= "string" then return false end
   return unit_name ~= selected
 end
--- Only an assigned participant's real hero may decide first blood.
--- Neutral, bot, unassigned or non-participant heroes must not end the duel.
 function Guards.is_competitor_hero(id, team, assigned, is_real_hero, is_illusion)
-  -- Snapshot net worth only for registered and assigned duel players.
--- Reject incomplete rosters rather than awarding a win from partial data.
+  return Guards.is_valid_duel_player(id, team)
+    and type(assigned) == "table" and assigned[id] == true
+    and is_real_hero == true and is_illusion ~= true
+end
+-- Count only assigned participants; reject incomplete/ambiguous rosters.
 function Guards.duel_networth(players, assigned, radiant, dire)
   if type(players) ~= "table" or type(assigned) ~= "table" then return nil end
   local totals, counts = {[radiant]=0,[dire]=0}, {[radiant]=0,[dire]=0}
   for _, player in ipairs(players) do
-    if Guards.is_competitor_hero(player.id, player.team, assigned, true, false)
-      and type(player.networth) == "number" and player.networth >= 0
-      and player.networth == player.networth then
-      totals[player.team] = totals[player.team] + player.networth
+    if Guards.is_competitor_hero(player.id, player.team, assigned, true, false) then
+      local nw = player.networth
+      if type(nw) ~= "number" or nw < 0 or nw ~= nw or nw == math.huge then return nil end
+      totals[player.team] = totals[player.team] + nw
       counts[player.team] = counts[player.team] + 1
     end
   end
   if counts[radiant] ~= 1 or counts[dire] ~= 1 then return nil end
   return totals[radiant], totals[dire]
-end
-return Guards.is_valid_duel_player(id, team)
-    and type(assigned) == "table" and assigned[id] == true
-    and is_real_hero == true and is_illusion ~= true
 end
 return Guards
